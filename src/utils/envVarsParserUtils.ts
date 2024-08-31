@@ -3,19 +3,21 @@ import dotenv from "dotenv";
 enum EnvVar {
   PORT = "PORT",
   ALLOWED_ORIGIN = "ALLOWED_ORIGIN",
-  DB_TYPE = "DB_TYPE",
   DB_HOST = "DB_HOST",
   DB_PORT = "DB_PORT",
   DB_NAME = "DB_NAME",
+  POSTGRES_PASSWORD = "POSTGRES_PASSWORD",
+  POSTGRES_USERNAME = "POSTGRES_USERNAME",
 }
 
-interface EnvVars {
+export interface EnvVars {
   port: number;
   allowedOrigin: string;
-  dbType: string;
   dbHost: string;
   dbPort: number;
   dbName: string;
+  psqlUsername: string;
+  psqlPassword: string;
 }
 
 export const buildEnvVars = (): EnvVars => {
@@ -34,9 +36,10 @@ export const buildEnvVars = (): EnvVars => {
   return {
     port: parseInt(process.env[EnvVar.PORT]!, 10),
     allowedOrigin: process.env[EnvVar.ALLOWED_ORIGIN]!,
-    dbType: process.env[EnvVar.DB_TYPE]!,
     dbHost: process.env[EnvVar.DB_HOST]!,
     dbPort: parseInt(process.env[EnvVar.DB_PORT]!, 10),
     dbName: process.env[EnvVar.DB_NAME]!,
+    psqlUsername: process.env[EnvVar.POSTGRES_USERNAME]!,
+    psqlPassword: process.env[EnvVar.POSTGRES_PASSWORD]!,
   };
 };
