@@ -15,10 +15,7 @@ app.use(cors(newCorsOption(envVars.allowedOrigin)));
 app.use(express.json());
 app.use(authMiddleware.authenticateReq);
 
-const router = express.Router({});
-new AuthRouter(router, pgDataSource);
-
-app.use(router);
+app.use(new AuthRouter(pgDataSource).route);
 
 app.listen(envVars.port, () => {
   console.log(`⚡️[server]: listening to ${envVars.port}...`);

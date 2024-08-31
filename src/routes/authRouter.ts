@@ -6,14 +6,19 @@ import { DataSource } from "typeorm";
 export default class AuthRouter {
   router: Router;
   dataSource: DataSource;
+  authController: AuthController;
 
-  constructor(router: Router, dataSource: DataSource) {
-    this.router = router;
+  constructor(dataSource: DataSource) {
+    this.router = Router();
+    // Can add my middlewares to this
+    // this.router.use()
+    
     this.dataSource = dataSource;
-    const authController = new AuthController(dataSource)
+    this.authController = new AuthController(dataSource);
+  }
 
-    router.post(Urls.SIGNUP, authController.postSignup);
+  public route(): Router {
+    this.router.post(Urls.SIGNUP, this.authController.postSignup);
+    return this.router;
   }
 }
-
-
