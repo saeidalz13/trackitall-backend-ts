@@ -1,4 +1,4 @@
 export interface ApiResp<T> {
-  payload: T;
+  payload?: T;
   error?: string;
 }

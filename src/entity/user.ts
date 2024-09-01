@@ -25,10 +25,4 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt!: Date;
-
-  // constructor(email: string, password: string) {
-  //   super()
-  //   this.email = email;
-  //   this.password = password;
-  // }
 }

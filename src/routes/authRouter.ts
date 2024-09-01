@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AuthController } from "../controllers/auth";
 import { Urls } from "./urls";
 import { DataSource } from "typeorm";
+import { logRequest } from "../middlewares/logMiddleware";
 
 export default class AuthRouter {
   router: Router;
@@ -10,14 +11,13 @@ export default class AuthRouter {
 
   constructor(dataSource: DataSource) {
     this.router = Router();
-    // Can add my middlewares to this
-    // this.router.use()
-    
+    this.router.use(logRequest)
+
     this.dataSource = dataSource;
     this.authController = new AuthController(dataSource);
   }
 
-  public route(): Router {
+  public route = (): Router => {
     this.router.post(Urls.SIGNUP, this.authController.postSignup);
     return this.router;
   }

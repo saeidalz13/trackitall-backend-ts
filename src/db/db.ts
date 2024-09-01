@@ -12,7 +12,7 @@ export const newPgDataSource = (envVars: EnvVars): DataSource => {
     database: envVars.dbName,
     migrationsRun: true,
     logging: ["query", "error"],
-    logger: "advanced-console",
+    // logger: "advanced-console",
     synchronize: true,
     entities: [User],
     // migrations: ["src/migration/**/*.ts"],

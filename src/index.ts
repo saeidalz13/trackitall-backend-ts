@@ -1,6 +1,6 @@
 import express from "express";
 import AuthRouter from "./routes/authRouter";
-import { authMiddleware } from "./middlewares/auth";
+import { authMiddleware } from "./middlewares/authMiddleware";
 import cors from "cors";
 import { buildEnvVars } from "./utils/envVarsParserUtils";
 import { newCorsOption } from "./utils/serverUtils";
@@ -15,7 +15,7 @@ app.use(cors(newCorsOption(envVars.allowedOrigin)));
 app.use(express.json());
 app.use(authMiddleware.authenticateReq);
 
-app.use(new AuthRouter(pgDataSource).route);
+app.use(new AuthRouter(pgDataSource).route());
 
 app.listen(envVars.port, () => {
   console.log(`⚡️[server]: listening to ${envVars.port}...`);
