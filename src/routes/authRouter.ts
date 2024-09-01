@@ -11,14 +11,15 @@ export default class AuthRouter {
 
   constructor(dataSource: DataSource) {
     this.router = Router();
-    this.router.use(logRequest)
+    this.router.use(logRequest);
 
     this.dataSource = dataSource;
     this.authController = new AuthController(dataSource);
   }
 
-  public route = (): Router => {
+  public route(): Router {
     this.router.post(Urls.SIGNUP, this.authController.postSignup);
+    this.router.post(Urls.LOGIN, this.authController.postLogin);
     return this.router;
   }
 }
