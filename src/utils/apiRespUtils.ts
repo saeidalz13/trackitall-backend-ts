@@ -9,8 +9,8 @@ export class ApiRespCreator {
     return { error: "Unexpected error in server; Please try again" };
   }
 
-  public static createResourceNotFound(): ApiResp<NoPayload> {
-    return { error: "Requested resource not found" };
+  public static createResourceNotFound(resource: string): ApiResp<NoPayload> {
+    return { error: `Requested ${resource} not found` };
   }
 
   public static createSuccessResponse<T>(payload: T): ApiResp<T> {

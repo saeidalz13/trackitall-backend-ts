@@ -94,7 +94,7 @@ export class AuthController {
       if (!user) {
         res
           .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send(ApiRespCreator.createResourceNotFound());
+          .send(ApiRespCreator.createResourceNotFound("user"));
         return;
       }
 
