@@ -8,6 +8,7 @@ enum EnvVar {
   DB_NAME = "DB_NAME",
   POSTGRES_PASSWORD = "POSTGRES_PASSWORD",
   POSTGRES_USERNAME = "POSTGRES_USERNAME",
+  JWT_SECRET = "JWT_SECRET",
 }
 
 export interface EnvVars {
@@ -18,6 +19,7 @@ export interface EnvVars {
   dbName: string;
   psqlUsername: string;
   psqlPassword: string;
+  jwtSecret: string;
 }
 
 export const buildEnvVars = (): EnvVars => {
@@ -41,5 +43,6 @@ export const buildEnvVars = (): EnvVars => {
     dbName: process.env[EnvVar.DB_NAME]!,
     psqlUsername: process.env[EnvVar.POSTGRES_USERNAME]!,
     psqlPassword: process.env[EnvVar.POSTGRES_PASSWORD]!,
+    jwtSecret: process.env[EnvVar.JWT_SECRET]!,
   };
 };

@@ -7,12 +7,17 @@ import { User } from "../entity/user";
 import { PostgresError } from "pg-error-enum";
 import { ReqLogin, RespLoginPayload } from "../models/auth/login";
 import { ApiRespCreator } from "../utils/apiRespUtils";
+import jwt, { Secret, JwtPayload, TokenExpiredError } from "jsonwebtoken";
+import { COOKIE_NAME } from "../constants/serverConsts";
+import { ApiJwtPayload } from "../models/auth/auth";
 
 export class AuthController {
   private dataSource: DataSource;
+  private jwtSecret: string;
 
-  constructor(dataSource: DataSource) {
+  constructor(dataSource: DataSource, jwtSecret: string) {
     this.dataSource = dataSource;
+    this.jwtSecret = jwtSecret;
   }
 
   private isReqBodyValid(body: any): body is ReqLogin {
@@ -21,6 +26,11 @@ export class AuthController {
       typeof body.email === "string" &&
       typeof body.password === "string"
     );
+  }
+
+  private buildCookie(userId: string, email: string): string {
+    const jwtP: ApiJwtPayload = { userId: userId, email: email };
+    return jwt.sign(jwtP, this.jwtSecret, { expiresIn: "15m" });
   }
 
   public postSignup = async (req: Request, res: Response) => {
@@ -53,6 +63,14 @@ export class AuthController {
           user_id: insertedRes.id,
         },
       };
+
+      res.cookie(COOKIE_NAME, this.buildCookie(user.id, user.email), {
+        sameSite: "none",
+        secure: false,
+        httpOnly: true,
+        maxAge: 900000, // 15 mins
+        path: "/",
+      });
 
       res.status(constants.HTTP_STATUS_OK).send(apiResp);
     } catch (error) {
@@ -98,6 +116,14 @@ export class AuthController {
         return;
       }
 
+      res.cookie(COOKIE_NAME, this.buildCookie(user.id, user.email), {
+        sameSite: "none",
+        secure: false,
+        httpOnly: true,
+        maxAge: 90000000, // 15 mins
+        path: "/",
+      });
+
       res.status(constants.HTTP_STATUS_OK).send(
         ApiRespCreator.createSuccessResponse<RespLoginPayload>({
           email: user.email,
@@ -105,6 +131,44 @@ export class AuthController {
         })
       );
     } catch (error) {
+      res
+        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send(ApiRespCreator.createUnexpectedErrorResponse());
+    }
+  };
+
+  public getAuth = async (req: Request, res: Response) => {
+    try {
+      const cookieValue = req.cookies[COOKIE_NAME];
+
+      if (cookieValue) {
+        const jwtP = jwt.verify(cookieValue, this.jwtSecret);
+
+        if (typeof jwtP !== "string") {
+          const decodedP = jwtP as ApiJwtPayload;
+          decodedP.email;
+
+          const user = await User.findOne({ where: { email: decodedP.email } });
+
+          if (!user) {
+            res
+              .status(constants.HTTP_STATUS_NOT_FOUND)
+              .send(ApiRespCreator.createResourceNotFound("user"));
+            return;
+          }
+
+          res.status(constants.HTTP_STATUS_OK).send(
+            ApiRespCreator.createSuccessResponse<RespLoginPayload>({
+              email: user.email,
+              user_id: user.id,
+            })
+          );
+        }
+      }
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        console.error("expired token!")
+      }
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send(ApiRespCreator.createUnexpectedErrorResponse());
