@@ -1,6 +1,7 @@
 import { DataSource } from "typeorm";
 import { EnvVars } from "../utils/envVarsParserUtils";
 import { User } from "../entity/user";
+import { Job } from "../entity/job";
 
 export const newPgDataSource = (envVars: EnvVars): DataSource => {
   const pgDataSource = new DataSource({
@@ -12,9 +13,9 @@ export const newPgDataSource = (envVars: EnvVars): DataSource => {
     database: envVars.dbName,
     migrationsRun: true,
     logging: ["query", "error"],
-    // logger: "advanced-console",
+    entities: [User, Job],
     synchronize: true,
-    entities: [User],
+    // logger: "advanced-console",
     // migrations: ["src/migration/**/*.ts"],
   });
 

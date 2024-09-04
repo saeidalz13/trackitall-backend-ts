@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { AuthController } from "../controllers/auth";
+import { AuthController } from "../controllers/authController";
 import { Urls } from "./urls";
 import { DataSource } from "typeorm";
 import { logRequest } from "../middlewares/logMiddleware";

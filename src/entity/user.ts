@@ -5,13 +5,16 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BaseEntity,
+  OneToMany,
+  type Relation
 } from "typeorm";
 import { ulid } from "ulid";
+import { Job } from "./job";
 
 // BaseEntity gives us CRUD operations ability
 @Entity("users")
 export class User extends BaseEntity {
-  @PrimaryColumn({ type: "char", length: 26 })
+  @PrimaryColumn({ name: "id", type: "char", length: 26 })
   id: string = ulid();
 
   @Column({ type: "varchar", length: 100, nullable: false, unique: true })
@@ -20,9 +23,15 @@ export class User extends BaseEntity {
   @Column({ type: "varchar", length: 60, nullable: false })
   password!: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @OneToMany(() => Job, (job) => job.user, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
+  jobs?: Relation<Job>[];
 }

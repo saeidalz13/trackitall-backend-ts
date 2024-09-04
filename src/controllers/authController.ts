@@ -7,7 +7,7 @@ import { User } from "../entity/user";
 import { PostgresError } from "pg-error-enum";
 import { ReqLogin, RespLoginPayload } from "../models/auth/login";
 import { ApiRespCreator } from "../utils/apiRespUtils";
-import jwt, { Secret, JwtPayload, TokenExpiredError } from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { COOKIE_NAME } from "../constants/serverConsts";
 import { ApiJwtPayload } from "../models/auth/auth";
 
@@ -37,12 +37,11 @@ export class AuthController {
     if (!this.isReqBodyValid(req.body)) {
       res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send(ApiRespCreator.createInvalidBodyResponse());
+        .send(ApiRespCreator.createErrInvalidBody());
       return;
     }
 
     const reqBody: ReqSignup = req.body;
-
     const hashedPw = Bun.password.hashSync(reqBody.password, {
       algorithm: "bcrypt",
       cost: 10,
@@ -57,12 +56,10 @@ export class AuthController {
       user.password = hashedPw;
       const insertedRes = await user.save();
 
-      const apiResp: ApiResp<RespSignupPayload> = {
-        payload: {
-          email: insertedRes.email,
-          user_id: insertedRes.id,
-        },
-      };
+      const apiResp = ApiRespCreator.createSuccessResponse<RespSignupPayload>({
+        email: insertedRes.email,
+        user_id: insertedRes.id,
+      });
 
       res.cookie(COOKIE_NAME, this.buildCookie(user.id, user.email), {
         sameSite: "none",
@@ -91,7 +88,7 @@ export class AuthController {
         console.log("Unexpected error in sign up:", error);
         res
           .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send(ApiRespCreator.createUnexpectedErrorResponse());
+          .send(ApiRespCreator.createErrUnexpected());
       }
     }
   };
@@ -100,7 +97,7 @@ export class AuthController {
     if (!this.isReqBodyValid(req.body)) {
       res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send(ApiRespCreator.createInvalidBodyResponse());
+        .send(ApiRespCreator.createErrInvalidBody());
       return;
     }
 
@@ -112,7 +109,7 @@ export class AuthController {
       if (!user) {
         res
           .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send(ApiRespCreator.createResourceNotFound("user"));
+          .send(ApiRespCreator.createErrResourceNotFound("user"));
         return;
       }
 
@@ -133,7 +130,7 @@ export class AuthController {
     } catch (error) {
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send(ApiRespCreator.createUnexpectedErrorResponse());
+        .send(ApiRespCreator.createErrUnexpected());
     }
   };
 
@@ -152,8 +149,8 @@ export class AuthController {
 
           if (!user) {
             res
-              .status(constants.HTTP_STATUS_NOT_FOUND)
-              .send(ApiRespCreator.createResourceNotFound("user"));
+              .status(constants.HTTP_STATUS_UNAUTHORIZED)
+              .send(ApiRespCreator.createErrResourceNotFound("user"));
             return;
           }
 
@@ -167,11 +164,11 @@ export class AuthController {
       }
     } catch (error) {
       if (error instanceof TokenExpiredError) {
-        console.error("expired token!")
+        console.error("expired token!");
       }
       res
-        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send(ApiRespCreator.createUnexpectedErrorResponse());
+        .status(constants.HTTP_STATUS_UNAUTHORIZED)
+        .send(ApiRespCreator.createErrUnexpected());
     }
   };
 }

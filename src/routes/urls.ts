@@ -4,7 +4,7 @@ export enum Urls {
   SIGNUP = "/signup",
   AUTH = "/auth",
   JOBS = "/jobs",
-  SINGLE_JOB = "/jobs/:id",
+  SINGLE_JOB = "/jobs/:jobUlid",
   COURSES = "/courses",
-  SINGLE_COURSE = "/courses/:id",
+  SINGLE_COURSE = "/courses/:courseUlid",
 }
