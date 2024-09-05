@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { constants } from "http2";
-import { ApiResp } from "../models/api/ApiResp";
+import { ApiResp, NoPayload } from "../models/api/ApiResp";
 import { ReqSignup, RespSignupPayload } from "../models/auth/signup";
 import { DataSource, QueryFailedError } from "typeorm";
 import { User } from "../entity/user";
@@ -10,6 +10,7 @@ import { ApiRespCreator } from "../utils/apiRespUtils";
 import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { COOKIE_NAME } from "../constants/serverConsts";
 import { ApiJwtPayload } from "../models/auth/auth";
+import Token from "../entity/token";
 
 export class AuthController {
   private dataSource: DataSource;
@@ -28,9 +29,42 @@ export class AuthController {
     );
   }
 
-  private buildCookie(userId: string, email: string): string {
+  private buildJWT(userId: string, email: string): string {
     const jwtP: ApiJwtPayload = { userId: userId, email: email };
-    return jwt.sign(jwtP, this.jwtSecret, { expiresIn: "15m" });
+    return jwt.sign(jwtP, this.jwtSecret, { expiresIn: "1h" });
+  }
+
+  private async storeJWT(
+    req: Request,
+    jwtToken: string
+  ): Promise<ApiResp<NoPayload> | null> {
+    try {
+      const ua = req.headers["user-agent"];
+      if (!ua) {
+        console.log("undefined user-agent");
+        return ApiRespCreator.createErrUserAgent();
+      }
+
+      console.log(req.headers)
+
+      const hostname = req.hostname;
+      if (!hostname) {
+        console.log("undefined hostname from request");
+        return ApiRespCreator.createErrIp();
+      }
+
+      const t = new Token();
+      t.hoseName = hostname;
+      t.userAgent = ua;
+      t.jwtToken = jwtToken;
+      await t.save();
+      return null;
+
+
+    } catch (error) {
+      console.error(error);
+      return ApiRespCreator.createErrUnexpected();
+    }
   }
 
   public postSignup = async (req: Request, res: Response) => {
@@ -61,11 +95,11 @@ export class AuthController {
         user_id: insertedRes.id,
       });
 
-      res.cookie(COOKIE_NAME, this.buildCookie(user.id, user.email), {
+      res.cookie(COOKIE_NAME, this.buildJWT(user.id, user.email), {
         sameSite: "none",
         secure: false,
         httpOnly: true,
-        maxAge: 900000, // 15 mins
+        maxAge: 3600000, // 1 hour
         path: "/",
       });
 
@@ -113,11 +147,19 @@ export class AuthController {
         return;
       }
 
-      res.cookie(COOKIE_NAME, this.buildCookie(user.id, user.email), {
+      const jwtToken = this.buildJWT(user.id, user.email);
+
+      const apiErr = await this.storeJWT(req, jwtToken)
+      if (apiErr) {
+        res.status(constants.HTTP_STATUS_BAD_REQUEST).send(apiErr)
+        return;
+      }
+
+      res.cookie(COOKIE_NAME, jwtToken, {
         sameSite: "none",
         secure: false,
         httpOnly: true,
-        maxAge: 90000000, // 15 mins
+        maxAge: 3600000, // 1 hour
         path: "/",
       });
 

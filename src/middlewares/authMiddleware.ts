@@ -5,6 +5,7 @@ import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { User } from "../entity/user";
 import { ApiJwtPayload } from "../models/auth/auth";
 import { ApiRespCreator } from "../utils/apiRespUtils";
+import Token from "../entity/token";
 
 export default class AuthMiddleware {
   jwtSecret: string;
@@ -20,26 +21,46 @@ export default class AuthMiddleware {
   ) => {
     try {
       const cookieValue = req.cookies[COOKIE_NAME];
+      const userAgent = req.headers["user-agent"];
+      const hostname = req.hostname;
+
+      const dbToken = await Token.findOneBy({ jwtToken: cookieValue });
+
+      if (
+        !dbToken ||
+        dbToken.hoseName !== hostname ||
+        dbToken.userAgent !== userAgent
+      ) {
+        res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
+        return;
+      }
 
       if (cookieValue) {
-        const jwtP = jwt.verify(cookieValue, this.jwtSecret);
+        try {
+          const jwtP = jwt.verify(cookieValue, this.jwtSecret);
+          if (typeof jwtP !== "string") {
+            const decodedP = jwtP as ApiJwtPayload;
+            decodedP.email;
 
-        if (typeof jwtP !== "string") {
-          const decodedP = jwtP as ApiJwtPayload;
-          decodedP.email;
+            const user = await User.findOne({
+              where: { email: decodedP.email },
+            });
 
-          const user = await User.findOne({ where: { email: decodedP.email } });
+            if (!user) {
+              res
+                .status(constants.HTTP_STATUS_UNAUTHORIZED)
+                .send(ApiRespCreator.createErrResourceNotFound("user"));
+              return;
+            }
 
-          if (!user) {
-            res
-              .status(constants.HTTP_STATUS_UNAUTHORIZED)
-              .send(ApiRespCreator.createErrResourceNotFound("user"));
+            console.log("Valid request; Forwarding...");
+            next();
             return;
           }
-          
-          console.log("Valid request; Forwarding...")
-          next();
-          return;
+        } catch (error) {
+          // This is an expired token and needs to be deleted
+          await Token.delete(dbToken.jwtToken)
+          console.error(error);
         }
       }
 

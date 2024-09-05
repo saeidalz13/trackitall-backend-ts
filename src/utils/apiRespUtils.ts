@@ -15,12 +15,22 @@ export class ApiRespCreator {
     return { error: `Requested ${resource} not found` };
   }
 
-  public static createErrBadQueryParam(expected: string, got: any): ApiResp<NoPayload> {
-    return {error: `Query params must be: ${expected}; got: ${got}`}
+  public static createErrBadQueryParam(
+    expected: string,
+    got: any
+  ): ApiResp<NoPayload> {
+    return { error: `Query params must be: ${expected}; got: ${got}` };
+  }
+
+  public static createErrUserAgent(): ApiResp<NoPayload> {
+    return { error: "user-agent in request header is undefined " };
+  }
+
+  public static createErrIp(): ApiResp<NoPayload> {
+    return { error: "ip in request is undefined " };
   }
 
   public static createSuccessResponse<T>(payload: T): ApiResp<T> {
     return { payload: payload };
   }
-
 }

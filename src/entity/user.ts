@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   BaseEntity,
   OneToMany,
-  type Relation
+  type Relation,
 } from "typeorm";
 import { ulid } from "ulid";
 import { Job } from "./job";
