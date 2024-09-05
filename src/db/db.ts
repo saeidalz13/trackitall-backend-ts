@@ -13,7 +13,11 @@ export const newPgDataSource = (envVars: EnvVars): DataSource => {
     password: envVars.psqlPassword,
     database: envVars.dbName,
     migrationsRun: true,
-    logging: ["query", "error"],
+    logging: [
+      // "query",
+      "info",
+      "error",
+    ],
     entities: [User, Job, Token],
     synchronize: true,
     // logger: "advanced-console",

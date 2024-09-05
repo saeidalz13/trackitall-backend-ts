@@ -45,8 +45,6 @@ export class AuthController {
         return ApiRespCreator.createErrUserAgent();
       }
 
-      console.log(req.headers)
-
       const hostname = req.hostname;
       if (!hostname) {
         console.log("undefined hostname from request");
@@ -59,8 +57,6 @@ export class AuthController {
       t.jwtToken = jwtToken;
       await t.save();
       return null;
-
-
     } catch (error) {
       console.error(error);
       return ApiRespCreator.createErrUnexpected();
@@ -149,9 +145,9 @@ export class AuthController {
 
       const jwtToken = this.buildJWT(user.id, user.email);
 
-      const apiErr = await this.storeJWT(req, jwtToken)
+      const apiErr = await this.storeJWT(req, jwtToken);
       if (apiErr) {
-        res.status(constants.HTTP_STATUS_BAD_REQUEST).send(apiErr)
+        res.status(constants.HTTP_STATUS_BAD_REQUEST).send(apiErr);
         return;
       }
 
@@ -202,8 +198,11 @@ export class AuthController {
               user_id: user.id,
             })
           );
+          return;
         }
       }
+      
+      res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         console.error("expired token!");

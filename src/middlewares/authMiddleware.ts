@@ -6,6 +6,7 @@ import { User } from "../entity/user";
 import { ApiJwtPayload } from "../models/auth/auth";
 import { ApiRespCreator } from "../utils/apiRespUtils";
 import Token from "../entity/token";
+import { ApiLogger } from "../utils/serverUtils";
 
 export default class AuthMiddleware {
   jwtSecret: string;
@@ -53,20 +54,20 @@ export default class AuthMiddleware {
               return;
             }
 
-            console.log("Valid request; Forwarding...");
+            ApiLogger.log("Valid request; Forwarding...");
             next();
             return;
           }
         } catch (error) {
           // This is an expired token and needs to be deleted
           await Token.delete(dbToken.jwtToken)
-          console.error(error);
+          ApiLogger.error(error);
         }
       }
 
       res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     } catch (error) {
-      console.log(error);
+      ApiLogger.log(error);
       res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     }
   };
