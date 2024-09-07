@@ -1,5 +1,7 @@
 import { CorsOptions } from "cors";
 import { constants } from "http2";
+import { DataSource, getRepository } from "typeorm";
+import Token from "../entity/token";
 
 export const newCorsOption = (allowedOrigin: string): CorsOptions => {
   return {
@@ -71,3 +73,11 @@ export class ApiLogger {
     return "unknown";
   }
 }
+
+export const deleteExpiredTokens = async (dataSource: DataSource): Promise<void> => {
+  await dataSource.getRepository(Token).createQueryBuilder()
+      .delete()
+      .from(Token)
+      .where('expiry_time < :now', { now: new Date() })
+      .execute();
+};

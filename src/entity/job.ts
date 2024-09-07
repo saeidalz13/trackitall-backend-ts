@@ -31,13 +31,13 @@ export class Job extends BaseEntity {
   @Column({ name: "applied_date", type: "timestamptz", default: new Date() })
   appliedDate!: Date;
 
-  @Column({ type: "varchar", length: 500 })
+  @Column({ type: "varchar", length: 500, nullable: true })
   link?: string;
 
-  @Column({ type: "varchar", length: 2000 })
+  @Column({ type: "varchar", length: 2000, nullable: true })
   description?: string;
 
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: "varchar", length: 255, nullable: true })
   notes?: string;
 
   @CreateDateColumn({ name: "created_at" })

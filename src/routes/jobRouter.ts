@@ -3,23 +3,22 @@ import AuthMiddleware from "../middlewares/authMiddleware";
 import { Urls } from "./urls";
 import { AuthController } from "../controllers/authController";
 import JobController from "../controllers/jobController";
+import { DataSource } from "typeorm";
 
 export default class JobRouter {
   router: Router;
-  jwtSecret: string;
   jobController: JobController
 
-  constructor(jwtSecret: string) {
+  constructor(jwtSecret: string, dataSource: DataSource) {
     this.router = Router();
-    this.jwtSecret = jwtSecret
     this.router.use(new AuthMiddleware(jwtSecret).authenticate)
 
-    this.jobController = new JobController()
+    this.jobController = new JobController(dataSource)
   }
 
   public route = (): Router => {
     this.router.get(Urls.JOBS, this.jobController.getJobs)
-    this.router.post(Urls.SINGLE_JOB, this.jobController.postJob)
+    this.router.post(Urls.JOBS, this.jobController.postJob)
 
     return this.router
   }

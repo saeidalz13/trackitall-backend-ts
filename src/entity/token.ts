@@ -1,4 +1,10 @@
-import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryColumn,
+} from "typeorm";
 
 @Entity("tokens")
 export default class Token extends BaseEntity {
@@ -20,4 +26,10 @@ export default class Token extends BaseEntity {
 
   @Column({ name: "host_name", nullable: false, type: "varchar", length: "50" })
   hoseName!: string;
+
+  @Column({ name: "expiry_time", type: "timestamp", nullable: false })
+  expiryTime!: Date;
+
+  @CreateDateColumn({ name: "created_at", type: "timestamp", nullable: false })
+  createdAt!: Date;
 }

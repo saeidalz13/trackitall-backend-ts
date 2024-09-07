@@ -13,7 +13,7 @@ export default class AuthRouter {
   constructor(dataSource: DataSource, jwtSecret: string) {
     this.router = Router();
     this.router.use(logRequest);
-    this.jwtSecret = jwtSecret
+    this.jwtSecret = jwtSecret;
 
     this.dataSource = dataSource;
     this.authController = new AuthController(dataSource, jwtSecret);
@@ -22,7 +22,8 @@ export default class AuthRouter {
   public route(): Router {
     this.router.post(Urls.SIGNUP, this.authController.postSignup);
     this.router.post(Urls.LOGIN, this.authController.postLogin);
-    this.router.get(Urls.AUTH, this.authController.getAuth)
+    this.router.delete(Urls.SIGNOUT, this.authController.postSignOut);
+    this.router.get(Urls.AUTH, this.authController.getAuth);
     return this.router;
   }
 }

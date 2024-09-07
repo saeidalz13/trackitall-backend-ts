@@ -11,6 +11,7 @@ import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { COOKIE_NAME } from "../constants/serverConsts";
 import { ApiJwtPayload } from "../models/auth/auth";
 import Token from "../entity/token";
+import { ApiLogger } from "../utils/serverUtils";
 
 export class AuthController {
   private dataSource: DataSource;
@@ -55,6 +56,8 @@ export class AuthController {
       t.hoseName = hostname;
       t.userAgent = ua;
       t.jwtToken = jwtToken;
+
+      t.expiryTime = new Date(Date.now() + 60 * 60 * 1000);
       await t.save();
       return null;
     } catch (error) {
@@ -91,7 +94,15 @@ export class AuthController {
         user_id: insertedRes.id,
       });
 
-      res.cookie(COOKIE_NAME, this.buildJWT(user.id, user.email), {
+      const jwtToken = this.buildJWT(user.id, user.email);
+
+      const apiErr = await this.storeJWT(req, jwtToken);
+      if (apiErr) {
+        res.status(constants.HTTP_STATUS_BAD_REQUEST).send(apiErr);
+        return;
+      }
+
+      res.cookie(COOKIE_NAME, jwtToken, {
         sameSite: "none",
         secure: false,
         httpOnly: true,
@@ -201,7 +212,7 @@ export class AuthController {
           return;
         }
       }
-      
+
       res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     } catch (error) {
       if (error instanceof TokenExpiredError) {
@@ -211,5 +222,18 @@ export class AuthController {
         .status(constants.HTTP_STATUS_UNAUTHORIZED)
         .send(ApiRespCreator.createErrUnexpected());
     }
+  };
+
+  public postSignOut = async (req: Request, res: Response) => {
+    const cookieValue = req.cookies[COOKIE_NAME];
+
+    if (!cookieValue) {
+      return;
+    }
+
+    // It doesn't matter if it fails
+    Token.delete(cookieValue)
+      .then(() => res.sendStatus(constants.HTTP_STATUS_NO_CONTENT))
+      .catch((error) => ApiLogger.error(`Failed to delete token: ${error}`));
   };
 }
