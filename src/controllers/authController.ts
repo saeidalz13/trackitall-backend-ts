@@ -186,41 +186,58 @@ export class AuthController {
   public getAuth = async (req: Request, res: Response) => {
     try {
       const cookieValue = req.cookies[COOKIE_NAME];
+      const userAgent = req.headers["user-agent"];
+      const hostname = req.hostname;
+
+      const dbToken = await Token.findOneBy({ jwtToken: cookieValue });
+
+      if (
+        !dbToken ||
+        dbToken.hoseName !== hostname ||
+        dbToken.userAgent !== userAgent
+      ) {
+        res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
+        return;
+      }
 
       if (cookieValue) {
-        const jwtP = jwt.verify(cookieValue, this.jwtSecret);
+        try {
+          const jwtP = jwt.verify(cookieValue, this.jwtSecret);
+          if (typeof jwtP !== "string") {
+            const decodedP = jwtP as ApiJwtPayload;
+            decodedP.email;
 
-        if (typeof jwtP !== "string") {
-          const decodedP = jwtP as ApiJwtPayload;
-          decodedP.email;
+            const user = await User.findOne({
+              where: { email: decodedP.email },
+            });
 
-          const user = await User.findOne({ where: { email: decodedP.email } });
+            if (!user) {
+              res
+                .status(constants.HTTP_STATUS_UNAUTHORIZED)
+                .send(ApiRespCreator.createErrResourceNotFound("user"));
+              return;
+            }
 
-          if (!user) {
-            res
-              .status(constants.HTTP_STATUS_UNAUTHORIZED)
-              .send(ApiRespCreator.createErrResourceNotFound("user"));
+            ApiLogger.log("Valid request; Forwarding...");
+            res.status(constants.HTTP_STATUS_OK).send(
+              ApiRespCreator.createSuccessResponse<RespLoginPayload>({
+                email: user.email,
+                user_id: user.id,
+              })
+            );
             return;
           }
-
-          res.status(constants.HTTP_STATUS_OK).send(
-            ApiRespCreator.createSuccessResponse<RespLoginPayload>({
-              email: user.email,
-              user_id: user.id,
-            })
-          );
-          return;
+        } catch (error) {
+          // This is an expired token and needs to be deleted
+          await Token.delete(dbToken.jwtToken);
+          ApiLogger.error(error);
         }
       }
 
       res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     } catch (error) {
-      if (error instanceof TokenExpiredError) {
-        console.error("expired token!");
-      }
-      res
-        .status(constants.HTTP_STATUS_UNAUTHORIZED)
-        .send(ApiRespCreator.createErrUnexpected());
+      ApiLogger.log(error);
+      res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     }
   };
 

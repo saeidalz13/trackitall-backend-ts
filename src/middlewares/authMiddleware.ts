@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { constants } from "http2";
 import { COOKIE_NAME } from "../constants/serverConsts";
-import jwt, { TokenExpiredError } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { User } from "../entity/user";
 import { ApiJwtPayload } from "../models/auth/auth";
 import { ApiRespCreator } from "../utils/apiRespUtils";
