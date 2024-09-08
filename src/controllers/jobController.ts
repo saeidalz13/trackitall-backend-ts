@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { query, Request, Response } from "express";
 import { Job } from "../entity/job";
 import { constants } from "http2";
 import { ApiRespCreator } from "../utils/apiRespUtils";
@@ -37,15 +37,37 @@ export default class JobController {
     return resp;
   };
 
-  private fetchRecentJobs = async (): Promise<Job[]> => {
-    const jobs = await this.dataSource
+  private fetchRecentJobs = async (userUlid: string): Promise<Job[]> => {
+    return this.dataSource
       .getRepository(Job)
       .createQueryBuilder("Job")
+      .where("Job.user_ulid = :userUlid", { userUlid })
       .orderBy("Job.job_ulid", "DESC")
       .limit(3)
       .getMany();
+  };
 
-    return jobs;
+  private fetchJobsWithPagination = async (
+    userUlid: string,
+    limit: number,
+    offset: number,
+    search: any
+  ): Promise<Job[]> => {
+    const queryBuilder = this.dataSource
+      .getRepository(Job)
+      .createQueryBuilder("jobs")
+      .where("jobs.user_ulid = :userUlid", { userUlid });
+
+    if (typeof search === "string" && search.trim() !== "") {
+      queryBuilder.andWhere(
+        `(jobs.position ILIKE :search OR jobs.company_name ILIKE :search OR jobs.description ILIKE :search)`,
+        { search: `%${search}%` }
+      );
+    }
+
+    queryBuilder.orderBy("jobs.job_ulid", "DESC").limit(limit).offset(offset);
+
+    return queryBuilder.getMany();
   };
 
   public postJob = async (req: Request, res: Response) => {
@@ -94,6 +116,25 @@ export default class JobController {
     return userUlid;
   };
 
+  private isRecentRequested = (
+    queryParam: any,
+    expectedValue: any
+  ): boolean => {
+    return typeof queryParam === "string" && queryParam === expectedValue;
+  };
+
+  private extractNumQuery = (queryParam: any): number | null => {
+    try {
+      if (typeof queryParam !== "string") {
+        return null;
+      }
+
+      return parseInt(queryParam, 10);
+    } catch (error) {
+      return null;
+    }
+  };
+
   public getJobs = async (req: Request, res: Response) => {
     try {
       const userUlid = this.fetchUserUlidFromQuery(req);
@@ -105,14 +146,31 @@ export default class JobController {
       }
 
       const recent = req.query.recent;
-      const jobCount = await Job.countBy({ userUlid: userUlid });
+      let jobCount = -1;
       let jobs: Job[] = [];
-      if (typeof recent === "string") {
-        ApiLogger.log("fetching recent jobs");
-        jobs = await this.fetchRecentJobs();
+
+      if (this.isRecentRequested(recent, "true")) {
+        jobs = await this.fetchRecentJobs(userUlid);
       } else {
-        jobs = await Job.findBy({ userUlid: userUlid });
+        const limit = this.extractNumQuery(req.query.limit);
+        const offset = this.extractNumQuery(req.query.offset);
+
+        if (limit === null || offset === null) {
+          res.sendStatus(constants.HTTP_STATUS_BAD_REQUEST);
+          return;
+        }
+
+        const search = req.query.search;
+
+        jobs = await this.fetchJobsWithPagination(
+          userUlid,
+          limit,
+          offset,
+          search
+        );
+        jobCount = await Job.countBy({ userUlid: userUlid });
       }
+
       if (jobs.length === 0) {
         res.sendStatus(constants.HTTP_STATUS_NO_CONTENT);
         return;
