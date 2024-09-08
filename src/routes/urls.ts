@@ -5,7 +5,7 @@ export enum Urls {
   SIGNOUT = "/signout",
   AUTH = "/auth",
   JOBS = "/jobs",
-  SINGLE_JOB = "/jobs/:jobUlid",
+  SINGLE_JOB = "/job/:jobUlid",
   COURSES = "/courses",
   SINGLE_COURSE = "/courses/:courseUlid",
 }

@@ -7,19 +7,23 @@ import { DataSource } from "typeorm";
 
 export default class JobRouter {
   router: Router;
-  jobController: JobController
+  jobController: JobController;
 
   constructor(jwtSecret: string, dataSource: DataSource) {
     this.router = Router();
-    this.router.use(new AuthMiddleware(jwtSecret).authenticate)
+    this.router.use(new AuthMiddleware(jwtSecret).authenticate);
 
-    this.jobController = new JobController(dataSource)
+    this.jobController = new JobController(dataSource);
   }
 
   public route = (): Router => {
-    this.router.get(Urls.JOBS, this.jobController.getJobs)
-    this.router.post(Urls.JOBS, this.jobController.postJob)
+    this.router.get(Urls.JOBS, this.jobController.getJobs);
+    this.router.get(Urls.SINGLE_JOB, this.jobController.getJob);
 
-    return this.router
-  }
+    this.router.delete(Urls.SINGLE_JOB, this.jobController.deleteJob);
+
+    this.router.post(Urls.JOBS, this.jobController.postJob);
+
+    return this.router;
+  };
 }
