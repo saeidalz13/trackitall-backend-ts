@@ -13,7 +13,10 @@ import JobRouter from "./routes/jobRouter";
 import cron from "node-cron";
 
 const envVars = buildEnvVars();
-const pgDataSource = newPgDataSource(envVars);
+const pgDataSource = await newPgDataSource(envVars);
+if (!pgDataSource) {
+  process.exit(0);
+}
 
 const app = express();
 
@@ -35,5 +38,5 @@ app.use(new AuthRouter(pgDataSource, envVars.jwtSecret).route());
 app.use(new JobRouter(envVars.jwtSecret, pgDataSource).route());
 
 app.listen(envVars.port, () => {
-  console.log(`⚡️[server]: listening to ${envVars.port}...`);
+  ApiLogger.log(`⚡️[server]: listening to ${envVars.port}...`);
 });

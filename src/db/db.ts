@@ -3,8 +3,11 @@ import { EnvVars } from "../utils/envVarsParserUtils";
 import { User } from "../entity/user";
 import { Job } from "../entity/job";
 import Token from "../entity/token";
+import { ApiLogger } from "../utils/serverUtils";
 
-export const newPgDataSource = (envVars: EnvVars): DataSource => {
+export const newPgDataSource = async (
+  envVars: EnvVars
+): Promise<DataSource | null> => {
   const pgDataSource = new DataSource({
     type: "postgres",
     host: envVars.dbHost,
@@ -24,14 +27,12 @@ export const newPgDataSource = (envVars: EnvVars): DataSource => {
     // migrations: ["src/migration/**/*.ts"],
   });
 
-  pgDataSource
-    .initialize()
-    .then(() => {
-      console.log("DataSource initialized!");
-    })
-    .catch((err) => {
-      console.error("Error with DataSource initialization", err);
-    });
-
-  return pgDataSource;
+  try {
+    const dataSource = await pgDataSource.initialize();
+    ApiLogger.log("DataSource initialized!");
+    return dataSource;
+  } catch (err) {
+    ApiLogger.error(`Error with DataSource initialization: ${err}`);
+    return null;
+  }
 };
