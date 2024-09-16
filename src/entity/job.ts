@@ -11,6 +11,7 @@ import {
 } from "typeorm";
 import { ulid } from "ulid";
 import { User } from "./user";
+import { JobApplication } from "../models/job/jobApplication";
 
 @Entity("jobs")
 export class Job extends BaseEntity {
@@ -52,4 +53,16 @@ export class Job extends BaseEntity {
 
   @Column({ name: "user_ulid", type: "char", length: 26 })
   userUlid!: string;
+
+  toJSON(): JobApplication {
+    return {
+      jobUlid: this.jobUlid,
+      position: this.position,
+      companyName: this.companyName,
+      appliedDate: this.appliedDate,
+      notes: this.notes,
+      description: this.description,
+      link: this.link,
+    }
+  }
 }

@@ -219,12 +219,41 @@ export default class JobController {
       });
   };
 
+  public patchJob = async (req: Request, res: Response) => {
+    const jobUlid = req.params["jobUlid"];
+
+    try {
+      const jobRepo = this.dataSource.getRepository(Job);
+      const job = await jobRepo.findOneBy({ jobUlid: jobUlid });
+      if (!job) {
+        res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+        return;
+      }
+
+      const updatedJob = jobRepo.merge(job, req.body);
+      await jobRepo.save(updatedJob);
+
+      res
+        .status(constants.HTTP_STATUS_OK)
+        .send(
+          ApiRespCreator.createSuccessResponse<JobApplication>(
+            updatedJob.toJSON()
+          )
+        );
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+      } else {
+        res.sendStatus(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+      }
+    }
+  };
+
   public deleteJob = async (req: Request, res: Response) => {
     const jobUlid = req.params["jobUlid"];
 
     Job.delete(jobUlid)
       .then((deleted) => {
-        ApiLogger.log(deleted);
         res.sendStatus(constants.HTTP_STATUS_NO_CONTENT);
       })
 

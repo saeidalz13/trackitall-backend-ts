@@ -17,12 +17,18 @@ export default class JobRouter {
   }
 
   public route = (): Router => {
+    // Get
     this.router.get(Urls.JOBS, this.jobController.getJobs);
     this.router.get(Urls.SINGLE_JOB, this.jobController.getJob);
 
+    // Delete
     this.router.delete(Urls.SINGLE_JOB, this.jobController.deleteJob);
 
+    // Post
     this.router.post(Urls.JOBS, this.jobController.postJob);
+
+    // Patch
+    this.router.patch(Urls.SINGLE_JOB, this.jobController.patchJob);
 
     return this.router;
   };
