@@ -89,7 +89,7 @@ export default class JobController {
         job.link = reqBody.link;
       }
       if (reqBody.notes) {
-        job.link = reqBody.notes;
+        job.notes = reqBody.notes;
       }
 
       const insertedJob = await job.save();
@@ -253,7 +253,7 @@ export default class JobController {
     const jobUlid = req.params["jobUlid"];
 
     Job.delete(jobUlid)
-      .then((deleted) => {
+      .then((_) => {
         res.sendStatus(constants.HTTP_STATUS_NO_CONTENT);
       })
 
