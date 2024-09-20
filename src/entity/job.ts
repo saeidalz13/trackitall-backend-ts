@@ -38,16 +38,16 @@ export class Job extends BaseEntity {
   @Column({ type: "varchar", length: 2000, nullable: true })
   description?: string;
 
-  @Column({ type: "varchar", length: 255, nullable: true })
-  notes?: string;
-
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => User, (user: User) => user.jobs)
+  @ManyToOne(() => User, (user: User) => user.jobs, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
   @JoinColumn({ name: "user_ulid" })
   user!: Relation<User>;
 
@@ -60,9 +60,8 @@ export class Job extends BaseEntity {
       position: this.position,
       companyName: this.companyName,
       appliedDate: this.appliedDate,
-      notes: this.notes,
       description: this.description,
       link: this.link,
-    }
+    };
   }
 }

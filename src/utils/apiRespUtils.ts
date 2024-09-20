@@ -1,6 +1,10 @@
 import { ApiResp, NoPayload } from "../models/api/ApiResp";
 
 export class ApiRespCreator {
+  public static createErrCustom(error: string): ApiResp<NoPayload> {
+    return { error: error };
+  }
+
   public static createErrInvalidBody(): ApiResp<NoPayload> {
     return { error: "Invalid request body" };
   }

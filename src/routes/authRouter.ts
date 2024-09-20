@@ -23,6 +23,7 @@ export default class AuthRouter {
     this.router.post(Urls.SIGNUP, this.authController.postSignup);
     this.router.post(Urls.LOGIN, this.authController.postLogin);
     this.router.delete(Urls.SIGNOUT, this.authController.postSignOut);
+    this.router.delete(Urls.USERS, this.authController.deleteUser);
     this.router.get(Urls.AUTH, this.authController.getAuth);
     return this.router;
   }

@@ -2,20 +2,24 @@ import { Request, Response } from "express";
 import { constants } from "http2";
 import { ApiResp, NoPayload } from "../models/api/ApiResp";
 import { ReqSignup, RespSignupPayload } from "../models/auth/signup";
-import { DataSource, QueryFailedError } from "typeorm";
+import { DataSource, EntityNotFoundError, QueryFailedError } from "typeorm";
 import { User } from "../entity/user";
 import { PostgresError } from "pg-error-enum";
 import { ReqLogin, RespLoginPayload } from "../models/auth/login";
 import { ApiRespCreator } from "../utils/apiRespUtils";
-import jwt, { TokenExpiredError } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { COOKIE_NAME } from "../constants/serverConsts";
 import { ApiJwtPayload } from "../models/auth/auth";
 import Token from "../entity/token";
 import { ApiLogger } from "../utils/serverUtils";
+import { InterviewQuestions } from "../entity/interviewQuestions";
+import { generateDefaultInterviewQuestions } from "../constants/userConsts";
 
 export class AuthController {
   private dataSource: DataSource;
   private jwtSecret: string;
+  private emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private specialChars = /[`!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?~ ]/;
 
   constructor(dataSource: DataSource, jwtSecret: string) {
     this.dataSource = dataSource;
@@ -66,6 +70,34 @@ export class AuthController {
     }
   }
 
+  private isEmailValid = (email: string): boolean => {
+    if (email === "") {
+      return false;
+    }
+
+    return !this.emailRegex.test(email);
+  };
+
+  private validatePassword = (password: string): null | string => {
+    if (password == "") {
+      return "no password provided";
+    }
+
+    if (password.length <= 8) {
+      return "Length must be equal or grater than 8";
+    }
+
+    if (!this.specialChars.test(password)) {
+      return "Must contain at least one special character";
+    }
+
+    if (!/\d/.test(password)) {
+      return "Must contain at least one number";
+    }
+
+    return null;
+  };
+
   public postSignup = async (req: Request, res: Response) => {
     if (!this.isReqBodyValid(req.body)) {
       res
@@ -80,8 +112,20 @@ export class AuthController {
       cost: 10,
     });
 
-    // TODO: Add Check for email and password
-    // ! Take the criteria from frontend
+    reqBody.password = reqBody.password.trim();
+
+    if (!this.isEmailValid(reqBody.email)) {
+      res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send(ApiRespCreator.createErrCustom("invalid email address"));
+    }
+
+    const err = this.validatePassword(reqBody.password);
+    if (err !== null) {
+      res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send(ApiRespCreator.createErrCustom(err));
+    }
 
     try {
       const user = new User();
@@ -102,11 +146,18 @@ export class AuthController {
         return;
       }
 
+      await this.dataSource
+        .createQueryBuilder()
+        .insert()
+        .into(InterviewQuestions)
+        .values(generateDefaultInterviewQuestions(insertedRes.id))
+        .execute();
+
       res.cookie(COOKIE_NAME, jwtToken, {
         sameSite: "none",
         secure: false,
         httpOnly: true,
-        maxAge: 3600000, // 1 hour
+        maxAge: 3600000,
         path: "/",
       });
 
@@ -124,13 +175,12 @@ export class AuthController {
           res.status(constants.HTTP_STATUS_BAD_REQUEST).send(apiResp);
           return;
         }
-
-        // Unexpected violations
-        console.log("Unexpected error in sign up:", error);
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send(ApiRespCreator.createErrUnexpected());
       }
+
+      console.error("Unexpected error in sign up:", error);
+      res
+        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send(ApiRespCreator.createErrUnexpected());
     }
   };
 
@@ -166,7 +216,7 @@ export class AuthController {
         sameSite: "none",
         secure: false,
         httpOnly: true,
-        maxAge: 3600000, // 1 hour
+        maxAge: 3600000,
         path: "/",
       });
 
@@ -252,5 +302,30 @@ export class AuthController {
     Token.delete(cookieValue)
       .then(() => res.sendStatus(constants.HTTP_STATUS_NO_CONTENT))
       .catch((error) => ApiLogger.error(`Failed to delete token: ${error}`));
+  };
+
+  public deleteUser = async (req: Request, res: Response) => {
+    try {
+      const userUlid = req.params["userUlid"];
+
+      await this.dataSource
+        .createQueryBuilder()
+        .delete()
+        .from(User)
+        .where("id = :id", { id: userUlid })
+        .execute();
+
+      res.status(constants.HTTP_STATUS_NO_CONTENT);
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+        return;
+      }
+
+      console.error(error);
+      res
+        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send(ApiRespCreator.createErrUnexpected());
+    }
   };
 }
