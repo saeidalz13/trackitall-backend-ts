@@ -75,7 +75,7 @@ export class AuthController {
       return false;
     }
 
-    return !this.emailRegex.test(email);
+    return this.emailRegex.test(email);
   };
 
   private validatePassword = (password: string): null | string => {
@@ -112,12 +112,16 @@ export class AuthController {
       cost: 10,
     });
 
+    // normalizing email and password
     reqBody.password = reqBody.password.trim();
+    reqBody.email = reqBody.email.trim();
+    reqBody.email = reqBody.email.toLowerCase();
 
     if (!this.isEmailValid(reqBody.email)) {
       res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send(ApiRespCreator.createErrCustom("invalid email address"));
+      return;
     }
 
     const err = this.validatePassword(reqBody.password);
@@ -125,6 +129,7 @@ export class AuthController {
       res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send(ApiRespCreator.createErrCustom(err));
+      return;
     }
 
     try {
