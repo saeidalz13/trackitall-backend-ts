@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { User } from "./user";
 
+
 @Entity("interview_questions")
 export class InterviewQuestions extends BaseEntity {
   @PrimaryGeneratedColumn({ name: "id" })
@@ -31,7 +32,8 @@ export class InterviewQuestions extends BaseEntity {
   })
   response?: string;
 
-  @ManyToOne(() => User, (user: User) => user.jobs, {
+  // User relationship
+  @ManyToOne(() => User, (user: User) => user.interviewQuestions, {
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   })

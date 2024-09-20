@@ -1,4 +1,4 @@
-import { query, Request, Response } from "express";
+import { Request, Response } from "express";
 import { Job } from "../entity/job";
 import { constants } from "http2";
 import { ApiRespCreator } from "../utils/apiRespUtils";
@@ -11,6 +11,7 @@ import {
 import { DataSource, EntityNotFoundError } from "typeorm";
 import { ApiLogger } from "../utils/serverUtils";
 import { error } from "console";
+
 
 export default class JobController {
   private dataSource: DataSource;
@@ -30,7 +31,6 @@ export default class JobController {
         appliedDate: jobs[i].appliedDate,
         description: jobs[i].description,
         link: jobs[i].link,
-        notes: jobs[i].notes,
       });
     }
 
@@ -73,6 +73,13 @@ export default class JobController {
   public postJob = async (req: Request, res: Response) => {
     try {
       const reqBody: ReqJobApplication = req.body;
+      const userUlid = this.fetchUserUlidFromQuery(req);
+      if (!userUlid) {
+        res
+          .status(constants.HTTP_STATUS_BAD_REQUEST)
+          .send(ApiRespCreator.createErrBadQueryParam("userUlid", userUlid));
+        return;
+      }
 
       const job = new Job();
       job.position = reqBody.position;
@@ -88,11 +95,14 @@ export default class JobController {
       if (reqBody.link) {
         job.link = reqBody.link;
       }
-      if (reqBody.notes) {
-        job.notes = reqBody.notes;
-      }
 
-      const insertedJob = await job.save();
+      const insertedJob = await this.dataSource.manager.transaction(
+        async (tem) => {
+          const insertedJob = await tem.save(job);
+
+          return insertedJob;
+        }
+      );
 
       const apiResp = ApiRespCreator.createSuccessResponse<RespJobApplication>({
         jobUlid: insertedJob.jobUlid,
@@ -101,7 +111,7 @@ export default class JobController {
 
       res.status(constants.HTTP_STATUS_CREATED).json(apiResp);
     } catch (error) {
-      console.error(error);
+      ApiLogger.error(error);
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send(ApiRespCreator.createErrUnexpected());
@@ -203,7 +213,6 @@ export default class JobController {
             position: job.position,
             companyName: job.companyName,
             appliedDate: job.appliedDate,
-            notes: job.notes,
             description: job.description,
             link: job.link,
           })

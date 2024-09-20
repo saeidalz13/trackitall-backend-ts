@@ -136,7 +136,20 @@ export class AuthController {
       const user = new User();
       user.email = reqBody.email;
       user.password = hashedPw;
-      const insertedRes = await user.save();
+
+      const insertedRes = await this.dataSource.manager.transaction(
+        async (tem) => {
+          const insertedRes = await tem.save(user);
+          await this.dataSource
+            .createQueryBuilder()
+            .insert()
+            .into(InterviewQuestions)
+            .values(generateDefaultInterviewQuestions(insertedRes.id))
+            .execute();
+          
+          return insertedRes;
+        }
+      );
 
       const apiResp = ApiRespCreator.createSuccessResponse<RespSignupPayload>({
         email: insertedRes.email,
@@ -150,13 +163,6 @@ export class AuthController {
         res.status(constants.HTTP_STATUS_BAD_REQUEST).send(apiErr);
         return;
       }
-
-      await this.dataSource
-        .createQueryBuilder()
-        .insert()
-        .into(InterviewQuestions)
-        .values(generateDefaultInterviewQuestions(insertedRes.id))
-        .execute();
 
       res.cookie(COOKIE_NAME, jwtToken, {
         sameSite: "none",
