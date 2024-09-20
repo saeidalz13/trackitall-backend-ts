@@ -8,10 +8,12 @@ import {
   ManyToOne,
   JoinColumn,
   type Relation,
+  OneToMany,
 } from "typeorm";
 import { ulid } from "ulid";
 import { User } from "./user";
 import { JobApplication } from "../models/job/jobApplication";
+import { JobInterviewQuestion } from "./jobInterviewQuestion";
 
 @Entity("jobs")
 export class Job extends BaseEntity {
@@ -44,17 +46,24 @@ export class Job extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
 
+  // Each user can have many jobs
   @ManyToOne(() => User, (user: User) => user.jobs, {
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   })
   @JoinColumn({ name: "user_ulid" })
   user!: Relation<User>;
-
   @Column({ name: "user_ulid", type: "char", length: 26 })
   userUlid!: string;
 
-  toJSON(): JobApplication {
+  // job interview relationship
+  @OneToMany(() => JobInterviewQuestion, (jiq) => jiq.job, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
+  jobInterviewQuestions?: Relation<JobInterviewQuestion>[];
+
+  public toJSON(): JobApplication {
     return {
       jobUlid: this.jobUlid,
       position: this.position,

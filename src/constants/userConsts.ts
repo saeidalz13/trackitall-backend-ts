@@ -1,6 +1,6 @@
 export const generateDefaultInterviewQuestions = (
   userUlid: string
-): Array<Object> => {
+): Array<any> => {
   return [
     {
       question: "Tell me about yourself",

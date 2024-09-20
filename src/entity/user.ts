@@ -10,7 +10,7 @@ import {
 } from "typeorm";
 import { ulid } from "ulid";
 import { Job } from "./job";
-import { InterviewQuestions } from "./interviewQuestions";
+import { InterviewQuestion } from "./interviewQuestion";
 
 // BaseEntity gives us CRUD operations ability
 @Entity("users")
@@ -36,9 +36,9 @@ export class User extends BaseEntity {
   })
   jobs?: Relation<Job>[];
 
-  @OneToMany(() => InterviewQuestions, (iq) => iq.user, {
+  @OneToMany(() => InterviewQuestion, (iq) => iq.user, {
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   })
-  interviewQuestions?: Relation<InterviewQuestions>[];
+  interviewQuestions?: Relation<InterviewQuestion>[];
 }

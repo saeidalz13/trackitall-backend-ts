@@ -4,7 +4,8 @@ import { User } from "../entity/user";
 import { Job } from "../entity/job";
 import Token from "../entity/token";
 import { ApiLogger } from "../utils/serverUtils";
-import { InterviewQuestions } from "../entity/interviewQuestions";
+import { InterviewQuestion } from "../entity/interviewQuestion";
+import { JobInterviewQuestion } from "../entity/jobInterviewQuestion";
 
 export const newPgDataSource = async (
   envVars: EnvVars
@@ -22,7 +23,7 @@ export const newPgDataSource = async (
       "info",
       "error",
     ],
-    entities: [User, Job, Token, InterviewQuestions],
+    entities: [User, Job, Token, InterviewQuestion, JobInterviewQuestion],
     synchronize: true,
     // logger: "advanced-console",
     // migrations: ["src/migration/**/*.ts"],

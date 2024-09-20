@@ -12,7 +12,7 @@ import { COOKIE_NAME } from "../constants/serverConsts";
 import { ApiJwtPayload } from "../models/auth/auth";
 import Token from "../entity/token";
 import { ApiLogger } from "../utils/serverUtils";
-import { InterviewQuestions } from "../entity/interviewQuestions";
+import { InterviewQuestion } from "../entity/interviewQuestion";
 import { generateDefaultInterviewQuestions } from "../constants/userConsts";
 
 export class AuthController {
@@ -107,10 +107,6 @@ export class AuthController {
     }
 
     const reqBody: ReqSignup = req.body;
-    const hashedPw = Bun.password.hashSync(reqBody.password, {
-      algorithm: "bcrypt",
-      cost: 10,
-    });
 
     // normalizing email and password
     reqBody.password = reqBody.password.trim();
@@ -132,6 +128,11 @@ export class AuthController {
       return;
     }
 
+    const hashedPw = Bun.password.hashSync(reqBody.password, {
+      algorithm: "bcrypt",
+      cost: 10,
+    });
+
     try {
       const user = new User();
       user.email = reqBody.email;
@@ -140,13 +141,13 @@ export class AuthController {
       const insertedRes = await this.dataSource.manager.transaction(
         async (tem) => {
           const insertedRes = await tem.save(user);
-          await this.dataSource
+          await tem
             .createQueryBuilder()
             .insert()
-            .into(InterviewQuestions)
+            .into(InterviewQuestion)
             .values(generateDefaultInterviewQuestions(insertedRes.id))
             .execute();
-          
+
           return insertedRes;
         }
       );
@@ -157,7 +158,6 @@ export class AuthController {
       });
 
       const jwtToken = this.buildJWT(user.id, user.email);
-
       const apiErr = await this.storeJWT(req, jwtToken);
       if (apiErr) {
         res.status(constants.HTTP_STATUS_BAD_REQUEST).send(apiErr);
@@ -188,7 +188,7 @@ export class AuthController {
         }
       }
 
-      console.error("Unexpected error in sign up:", error);
+      ApiLogger.error(`Unexpected error in sign up: ${error}`);
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send(ApiRespCreator.createErrUnexpected());
