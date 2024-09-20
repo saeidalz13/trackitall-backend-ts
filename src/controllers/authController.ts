@@ -320,7 +320,7 @@ export class AuthController {
         .where("id = :id", { id: userUlid })
         .execute();
 
-      res.status(constants.HTTP_STATUS_NO_CONTENT);
+      res.sendStatus(constants.HTTP_STATUS_NO_CONTENT);
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);

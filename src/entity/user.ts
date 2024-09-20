@@ -10,7 +10,7 @@ import {
 } from "typeorm";
 import { ulid } from "ulid";
 import { Job } from "./job";
-import {InterviewQuestions} from "./interviewQuestions";
+import { InterviewQuestions } from "./interviewQuestions";
 
 // BaseEntity gives us CRUD operations ability
 @Entity("users")
@@ -18,7 +18,7 @@ export class User extends BaseEntity {
   @PrimaryColumn({ name: "id", type: "char", length: 26 })
   id: string = ulid();
 
-  @Column({ type: "varchar", length: 100, nullable: false, unique: true })
+  @Column({ type: "varchar", length: 100, nullable: false })
   email!: string;
 
   @Column({ type: "varchar", length: 60, nullable: false })
