@@ -42,4 +42,10 @@ export class JobInterviewQuestion extends BaseEntity {
   // Response to each question, initially null
   @Column({ name: "response", type: "varchar", length: 2000, nullable: true })
   response?: string;
+
+  public toJSON() {
+    return {
+      
+    }
+  }
 }

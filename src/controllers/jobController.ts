@@ -7,11 +7,13 @@ import {
   ReqJobApplication,
   RespJobApplications,
   JobApplication,
+  RespJobInterviewQuestions,
 } from "../models/job/jobApplication";
 import { DataSource, EntityNotFoundError } from "typeorm";
 import { ApiLogger } from "../utils/serverUtils";
 import { error } from "console";
-
+import { InterviewQuestion } from "../entity/interviewQuestion";
+import { JobInterviewQuestion } from "../entity/jobInterviewQuestion";
 
 export default class JobController {
   private dataSource: DataSource;
@@ -35,6 +37,33 @@ export default class JobController {
     }
 
     return resp;
+  };
+
+  private fetchUserUlidFromQuery = (req: Request): string | null => {
+    const userUlid = req.query.userUlid;
+    if (typeof userUlid !== "string") {
+      return null;
+    }
+    return userUlid;
+  };
+
+  private isRecentRequested = (
+    queryParam: any,
+    expectedValue: any
+  ): boolean => {
+    return typeof queryParam === "string" && queryParam === expectedValue;
+  };
+
+  private extractNumQuery = (queryParam: any): number | null => {
+    try {
+      if (typeof queryParam !== "string") {
+        return null;
+      }
+
+      return parseInt(queryParam, 10);
+    } catch (error) {
+      return null;
+    }
   };
 
   private fetchRecentJobs = async (userUlid: string): Promise<Job[]> => {
@@ -70,6 +99,24 @@ export default class JobController {
     return queryBuilder.getMany();
   };
 
+  private createNewJob(reqBody: ReqJobApplication): Job {
+    const job = new Job();
+    job.position = reqBody.position;
+    job.companyName = reqBody.companyName;
+    job.userUlid = reqBody.user_ulid;
+    if (reqBody.description) {
+      job.description = reqBody.description;
+    }
+    if (reqBody.appliedDate) {
+      job.appliedDate = reqBody.appliedDate;
+    }
+    if (reqBody.link) {
+      job.link = reqBody.link;
+    }
+
+    return job;
+  }
+
   public postJob = async (req: Request, res: Response) => {
     try {
       const reqBody: ReqJobApplication = req.body;
@@ -81,24 +128,33 @@ export default class JobController {
         return;
       }
 
-      const job = new Job();
-      job.position = reqBody.position;
-      job.companyName = reqBody.companyName;
-      job.userUlid = reqBody.user_ulid;
-
-      if (reqBody.description) {
-        job.description = reqBody.description;
-      }
-      if (reqBody.appliedDate) {
-        job.appliedDate = reqBody.appliedDate;
-      }
-      if (reqBody.link) {
-        job.link = reqBody.link;
-      }
+      const job = this.createNewJob(reqBody);
 
       const insertedJob = await this.dataSource.manager.transaction(
         async (tem) => {
           const insertedJob = await tem.save(job);
+
+          const interviewQuestions = await tem
+            .createQueryBuilder(InterviewQuestion, "interview_questions")
+            .where("interview_questions.user_ulid = :userUlid", {
+              userUlid: userUlid,
+            })
+            .getMany();
+
+          const jobQuestions = [];
+          for (let i = 0; i < interviewQuestions.length; i++) {
+            jobQuestions.push({
+              jobUlid: insertedJob.jobUlid,
+              interviewQuestionId: interviewQuestions[i].id,
+            });
+          }
+
+          await tem
+            .createQueryBuilder()
+            .insert()
+            .into(JobInterviewQuestion)
+            .values(jobQuestions)
+            .execute();
 
           return insertedJob;
         }
@@ -115,33 +171,6 @@ export default class JobController {
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send(ApiRespCreator.createErrUnexpected());
-    }
-  };
-
-  private fetchUserUlidFromQuery = (req: Request): string | null => {
-    const userUlid = req.query.userUlid;
-    if (typeof userUlid !== "string") {
-      return null;
-    }
-    return userUlid;
-  };
-
-  private isRecentRequested = (
-    queryParam: any,
-    expectedValue: any
-  ): boolean => {
-    return typeof queryParam === "string" && queryParam === expectedValue;
-  };
-
-  private extractNumQuery = (queryParam: any): number | null => {
-    try {
-      if (typeof queryParam !== "string") {
-        return null;
-      }
-
-      return parseInt(queryParam, 10);
-    } catch (error) {
-      return null;
     }
   };
 
@@ -226,6 +255,48 @@ export default class JobController {
           res.sendStatus(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
         }
       });
+  };
+
+  public getJobInterviewQuestions = async (req: Request, res: Response) => {
+    const jobUlid = req.params["jobUlid"];
+
+    try {
+      const jic = await this.dataSource.manager
+        .createQueryBuilder(JobInterviewQuestion, "job_interview_question")
+        .innerJoinAndSelect(
+          "job_interview_question.interviewQuestion",
+          "interview_question"
+        )
+        .where("job_interview_question.jobUlid = :jobUlid", { jobUlid })
+        .select([
+          "job_interview_question.id",
+          "interview_question.question",
+          "job_interview_question.response"
+        ])
+        .getMany();
+
+      const payload: RespJobInterviewQuestions = {
+        job_interview_questions: [],
+      };
+
+      for (let i = 0; i < jic.length; i++) {
+        payload.job_interview_questions.push({
+          id: jic[i].id,
+          question: jic[i].interviewQuestion.question,
+          response: jic[i].response,
+        });
+      }
+
+      res.status(constants.HTTP_STATUS_OK).send(ApiRespCreator.createSuccessResponse(payload));
+      
+    } catch (error) {
+      ApiLogger.error(error);
+      if (error instanceof EntityNotFoundError) {
+        res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+      } else {
+        res.sendStatus(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+      }
+    }
   };
 
   public patchJob = async (req: Request, res: Response) => {

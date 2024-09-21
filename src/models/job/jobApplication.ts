@@ -27,3 +27,13 @@ export interface ReqJobApplication {
   notes?: string;
   link?: string;
 }
+
+interface JobInterviewQuestionsModified {
+  id: number;
+  question: string;
+  response?: string;
+}
+
+export interface RespJobInterviewQuestions {
+  job_interview_questions: JobInterviewQuestionsModified[];
+}
