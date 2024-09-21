@@ -8,6 +8,7 @@ import {
   RespJobApplications,
   JobApplication,
   RespJobInterviewQuestions,
+  JobInterviewQuestionsModified,
 } from "../models/job/jobApplication";
 import { DataSource, EntityNotFoundError } from "typeorm";
 import { ApiLogger } from "../utils/serverUtils";
@@ -249,7 +250,7 @@ export default class JobController {
     const jobUlid = req.params["jobUlid"];
 
     try {
-      const jic = await this.dataSource.manager
+      const jiq = await this.dataSource.manager
         .createQueryBuilder(JobInterviewQuestion, "job_interview_question")
         .innerJoinAndSelect(
           "job_interview_question.interviewQuestion",
@@ -267,11 +268,11 @@ export default class JobController {
         job_interview_questions: [],
       };
 
-      for (let i = 0; i < jic.length; i++) {
+      for (let i = 0; i < jiq.length; i++) {
         payload.job_interview_questions.push({
-          id: jic[i].id,
-          question: jic[i].interviewQuestion.question,
-          response: jic[i].response,
+          id: jiq[i].id,
+          question: jiq[i].interviewQuestion.question,
+          response: jiq[i].response,
         });
       }
 
@@ -310,6 +311,49 @@ export default class JobController {
           )
         );
     } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+      } else {
+        res.sendStatus(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+      }
+    }
+  };
+
+  public patchJobInterviewQuestion = async (req: Request, res: Response) => {
+    const jobUlid = req.params["jobUlid"];
+    const jiqIdParams = req.params["jiqId"];
+
+    try {
+      const jiqId = parseInt(jiqIdParams, 10);
+
+      const jiqRepo = this.dataSource.getRepository(JobInterviewQuestion);
+      const jiq = await jiqRepo.findOneBy({ id: jiqId, jobUlid: jobUlid });
+      if (!jiq) {
+        res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+        return;
+      }
+
+      const updatedJiq = jiqRepo.merge(jiq, req.body);
+      await jiqRepo.save(updatedJiq);
+
+      const iq = await InterviewQuestion.findOneBy({
+        id: updatedJiq.interviewQuestionId,
+      });
+      if (!iq) {
+        res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+        return;
+      }
+
+      res
+        .status(constants.HTTP_STATUS_OK)
+        .send(
+          ApiRespCreator.createSuccessResponse<JobInterviewQuestionsModified>(
+            updatedJiq.toJSON(iq.question)
+          )
+        );
+    } catch (error) {
+      ApiLogger.error(error);
+
       if (error instanceof EntityNotFoundError) {
         res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
       } else {

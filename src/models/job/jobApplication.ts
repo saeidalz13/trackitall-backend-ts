@@ -28,7 +28,7 @@ export interface ReqJobApplication {
   link?: string;
 }
 
-interface JobInterviewQuestionsModified {
+export interface JobInterviewQuestionsModified {
   id: number;
   question: string;
   response?: string;

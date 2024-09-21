@@ -43,9 +43,11 @@ export class JobInterviewQuestion extends BaseEntity {
   @Column({ name: "response", type: "varchar", length: 2000, nullable: true })
   response?: string;
 
-  public toJSON() {
+  public toJSON(question: string) {
     return {
-      
-    }
+      id: this.id,
+      question: question,
+      response: this.response,
+    };
   }
 }

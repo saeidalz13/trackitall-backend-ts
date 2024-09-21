@@ -20,7 +20,10 @@ export default class JobRouter {
     // Get
     this.router.get(Urls.JOBS, this.jobController.getJobs);
     this.router.get(Urls.SINGLE_JOB, this.jobController.getJob);
-    this.router.get(Urls.INTERVIEW_QUESTIONS, this.jobController.getJobInterviewQuestions)
+    this.router.get(
+      Urls.INTERVIEW_QUESTIONS,
+      this.jobController.getJobInterviewQuestions
+    );
 
     // Delete
     this.router.delete(Urls.SINGLE_JOB, this.jobController.deleteJob);
@@ -30,6 +33,10 @@ export default class JobRouter {
 
     // Patch
     this.router.patch(Urls.SINGLE_JOB, this.jobController.patchJob);
+    this.router.patch(
+      Urls.JOB_INTERVIEW_QUESTION,
+      this.jobController.patchJobInterviewQuestion
+    );
 
     return this.router;
   };
