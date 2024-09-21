@@ -262,6 +262,7 @@ export default class JobController {
           "interview_question.question",
           "job_interview_question.response",
         ])
+        .orderBy("interview_question.id", "ASC")
         .getMany();
 
       const payload: RespJobInterviewQuestions = {
