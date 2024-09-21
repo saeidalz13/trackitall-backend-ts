@@ -40,6 +40,9 @@ export class Job extends BaseEntity {
   @Column({ type: "varchar", length: 2000, nullable: true })
   description?: string;
 
+  @Column({ type: "varchar", length: 2000, nullable: true })
+  notes?: string;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
@@ -71,6 +74,7 @@ export class Job extends BaseEntity {
       appliedDate: this.appliedDate,
       description: this.description,
       link: this.link,
+      notes: this.notes,
     };
   }
 }

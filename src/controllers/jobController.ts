@@ -26,14 +26,7 @@ export default class JobController {
     const resp: JobApplication[] = [];
 
     for (let i = 0; i < jobs.length; i++) {
-      resp.push({
-        jobUlid: jobs[i].jobUlid,
-        position: jobs[i].position,
-        companyName: jobs[i].companyName,
-        appliedDate: jobs[i].appliedDate,
-        description: jobs[i].description,
-        link: jobs[i].link,
-      });
+      resp.push(jobs[i].toJSON());
     }
 
     return resp;
@@ -236,16 +229,11 @@ export default class JobController {
 
     Job.findOneByOrFail({ jobUlid: jobUlid })
       .then((job) => {
-        res.status(constants.HTTP_STATUS_OK).send(
-          ApiRespCreator.createSuccessResponse<JobApplication>({
-            jobUlid: job.jobUlid,
-            position: job.position,
-            companyName: job.companyName,
-            appliedDate: job.appliedDate,
-            description: job.description,
-            link: job.link,
-          })
-        );
+        res
+          .status(constants.HTTP_STATUS_OK)
+          .send(
+            ApiRespCreator.createSuccessResponse<JobApplication>(job.toJSON())
+          );
       })
 
       .catch((error) => {
@@ -271,7 +259,7 @@ export default class JobController {
         .select([
           "job_interview_question.id",
           "interview_question.question",
-          "job_interview_question.response"
+          "job_interview_question.response",
         ])
         .getMany();
 
@@ -287,8 +275,9 @@ export default class JobController {
         });
       }
 
-      res.status(constants.HTTP_STATUS_OK).send(ApiRespCreator.createSuccessResponse(payload));
-      
+      res
+        .status(constants.HTTP_STATUS_OK)
+        .send(ApiRespCreator.createSuccessResponse(payload));
     } catch (error) {
       ApiLogger.error(error);
       if (error instanceof EntityNotFoundError) {
