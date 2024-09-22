@@ -6,6 +6,7 @@ export interface JobApplication {
   description: string | null;
   link: string | null;
   aiInsight: string | null;
+  resumePath: string | null;
 }
 
 export interface RespJobApplications {

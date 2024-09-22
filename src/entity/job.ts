@@ -48,6 +48,9 @@ export class Job extends BaseEntity {
   @Column({ type: "varchar", length: MaxChar.AI_SUMMARY, nullable: true })
   aiInsight: string | null = null;
 
+  @Column({ name: "resume_path", type: "varchar", length: 500, nullable: true })
+  resumePath: string | null = null;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
@@ -80,6 +83,7 @@ export class Job extends BaseEntity {
       description: this.description,
       link: this.link,
       aiInsight: this.aiInsight,
+      resumePath: this.resumePath,
     };
   }
 }
