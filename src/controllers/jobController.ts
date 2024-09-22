@@ -297,12 +297,15 @@ export default class JobController {
       const jobRepo = this.dataSource.getRepository(Job);
       const job = await jobRepo.findOneBy({ jobUlid: jobUlid });
       if (!job) {
+        ApiLogger.log("HERE1");
         res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
         return;
       }
 
       const updatedJob = jobRepo.merge(job, req.body);
       await jobRepo.save(updatedJob);
+
+      ApiLogger.log("HERE2");
 
       res
         .status(constants.HTTP_STATUS_OK)
@@ -313,6 +316,7 @@ export default class JobController {
         );
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
+        ApiLogger.log("HERE3");
         res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
       } else {
         res.sendStatus(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);

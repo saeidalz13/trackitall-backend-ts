@@ -9,6 +9,7 @@ enum EnvVar {
   POSTGRES_PASSWORD = "POSTGRES_PASSWORD",
   POSTGRES_USERNAME = "POSTGRES_USERNAME",
   JWT_SECRET = "JWT_SECRET",
+  OPEN_API_KEY = "OPEN_API_KEY",
 }
 
 export interface EnvVars {
@@ -20,6 +21,7 @@ export interface EnvVars {
   psqlUsername: string;
   psqlPassword: string;
   jwtSecret: string;
+  openApiKey: string;
 }
 
 export const buildEnvVars = (): EnvVars => {
@@ -44,5 +46,6 @@ export const buildEnvVars = (): EnvVars => {
     psqlUsername: process.env[EnvVar.POSTGRES_USERNAME]!,
     psqlPassword: process.env[EnvVar.POSTGRES_PASSWORD]!,
     jwtSecret: process.env[EnvVar.JWT_SECRET]!,
+    openApiKey: process.env[EnvVar.OPEN_API_KEY]!,
   };
 };

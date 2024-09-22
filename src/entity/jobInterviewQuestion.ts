@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { InterviewQuestion } from "./interviewQuestion";
 import { Job } from "./job";
+import { MaxChar } from "../constants/serverConsts";
 
 @Entity("job_interview_questions")
 export class JobInterviewQuestion extends BaseEntity {
@@ -40,8 +41,13 @@ export class JobInterviewQuestion extends BaseEntity {
   jobUlid!: string;
 
   // Response to each question, initially null
-  @Column({ name: "response", type: "varchar", length: 2000, nullable: true })
-  response?: string;
+  @Column({
+    name: "response",
+    type: "varchar",
+    length: MaxChar.INTERVIEW_SAMPLE_QUESTION_RESP,
+    nullable: true,
+  })
+  response: string | null = null;
 
   public toJSON(question: string) {
     return {

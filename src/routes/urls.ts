@@ -11,4 +11,6 @@ export enum Urls {
   JOB_INTERVIEW_QUESTION = "/jobs/:jobUlid/job-interview-questions/:jiqId",
   COURSES = "/courses",
   SINGLE_COURSE = "/courses/:courseUlid",
+
+  AI_INSIGHT = "/ai-insight/:jobUlid"
 }

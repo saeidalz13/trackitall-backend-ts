@@ -1,6 +1,6 @@
 import { CorsOptions } from "cors";
 import { constants } from "http2";
-import { DataSource, getRepository } from "typeorm";
+import { DataSource } from "typeorm";
 import Token from "../entity/token";
 
 export const newCorsOption = (allowedOrigin: string): CorsOptions => {

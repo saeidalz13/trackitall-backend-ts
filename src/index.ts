@@ -11,6 +11,7 @@ import { newPgDataSource } from "./db/db";
 import cookieParser from "cookie-parser";
 import JobRouter from "./routes/jobRouter";
 import cron from "node-cron";
+import AiRouter from "./routes/aiRouter";
 
 const envVars = buildEnvVars();
 const pgDataSource = await newPgDataSource(envVars);
@@ -34,6 +35,9 @@ app.use(cookieParser());
 app.use(cors(newCorsOption(envVars.allowedOrigin)));
 app.use(express.json());
 
+app.use(
+  new AiRouter(pgDataSource, envVars.openApiKey, envVars.jwtSecret).route()
+);
 app.use(new AuthRouter(pgDataSource, envVars.jwtSecret).route());
 app.use(new JobRouter(envVars.jwtSecret, pgDataSource).route());
 

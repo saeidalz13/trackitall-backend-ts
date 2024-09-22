@@ -65,6 +65,8 @@ export default class AuthMiddleware {
         }
       }
 
+      ApiLogger.error("No cookies!")
+
       res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     } catch (error) {
       ApiLogger.log(error);

@@ -14,6 +14,7 @@ import { ulid } from "ulid";
 import { User } from "./user";
 import { JobApplication } from "../models/job/jobApplication";
 import { JobInterviewQuestion } from "./jobInterviewQuestion";
+import { MaxChar } from "../constants/serverConsts";
 
 @Entity("jobs")
 export class Job extends BaseEntity {
@@ -35,13 +36,17 @@ export class Job extends BaseEntity {
   appliedDate!: Date;
 
   @Column({ type: "varchar", length: 500, nullable: true })
-  link?: string;
+  link: string | null = null;
 
-  @Column({ type: "varchar", length: 2000, nullable: true })
-  description?: string;
+  @Column({
+    type: "varchar",
+    length: MaxChar.JOB_DESC,
+    nullable: true,
+  })
+  description: string | null = null;
 
-  @Column({ type: "varchar", length: 2000, nullable: true })
-  notes?: string;
+  @Column({ type: "varchar", length: MaxChar.AI_SUMMARY, nullable: true })
+  aiInsight: string | null = null;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
@@ -74,7 +79,7 @@ export class Job extends BaseEntity {
       appliedDate: this.appliedDate,
       description: this.description,
       link: this.link,
-      notes: this.notes,
+      aiInsight: this.aiInsight,
     };
   }
 }
