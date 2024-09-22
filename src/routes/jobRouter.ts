@@ -30,6 +30,7 @@ export default class JobRouter {
 
     // Post
     this.router.post(Urls.JOBS, this.jobController.postJob);
+    this.router.post(Urls.RESUME, this.jobController.postResume)
 
     // Patch
     this.router.patch(Urls.SINGLE_JOB, this.jobController.patchJob);

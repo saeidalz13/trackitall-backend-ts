@@ -31,6 +31,7 @@ cron.schedule("*/5 * * * *", async () => {
   }
 });
 
+app.use(express.raw({ type: "application/pdf", limit: "10mb" }));
 app.use(cookieParser());
 app.use(cors(newCorsOption(envVars.allowedOrigin)));
 app.use(express.json());
