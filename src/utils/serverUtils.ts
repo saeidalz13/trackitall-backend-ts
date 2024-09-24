@@ -6,6 +6,7 @@ import Token from "../entity/token";
 export const newCorsOption = (allowedOrigin: string): CorsOptions => {
   return {
     optionsSuccessStatus: constants.HTTP_STATUS_OK,
+    // origin: "*",
     origin: allowedOrigin,
     credentials: true,
   };

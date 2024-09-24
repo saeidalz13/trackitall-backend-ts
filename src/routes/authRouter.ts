@@ -4,27 +4,17 @@ import { Urls } from "./urls";
 import { DataSource } from "typeorm";
 import { logRequest } from "../middlewares/logMiddleware";
 
-export default class AuthRouter {
-  router: Router;
-  dataSource: DataSource;
-  jwtSecret: string;
-  authController: AuthController;
+const NewAuthRouter = (dataSource: DataSource, jwtSecret: string): Router => {
+  const router = Router();
+  router.use(logRequest);
+  const authController = new AuthController(dataSource, jwtSecret);
 
-  constructor(dataSource: DataSource, jwtSecret: string) {
-    this.router = Router();
-    this.router.use(logRequest);
-    this.jwtSecret = jwtSecret;
+  router.post(Urls.SIGNUP, authController.postSignup);
+  router.post(Urls.LOGIN, authController.postLogin);
+  router.delete(Urls.SIGNOUT, authController.postSignOut);
+  router.delete(Urls.USERS, authController.deleteUser);
+  router.get(Urls.AUTH, authController.getAuth);
+  return router;
+};
 
-    this.dataSource = dataSource;
-    this.authController = new AuthController(dataSource, jwtSecret);
-  }
-
-  public route(): Router {
-    this.router.post(Urls.SIGNUP, this.authController.postSignup);
-    this.router.post(Urls.LOGIN, this.authController.postLogin);
-    this.router.delete(Urls.SIGNOUT, this.authController.postSignOut);
-    this.router.delete(Urls.USERS, this.authController.deleteUser);
-    this.router.get(Urls.AUTH, this.authController.getAuth);
-    return this.router;
-  }
-}
+export default NewAuthRouter;

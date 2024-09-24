@@ -3,23 +3,13 @@ import { DataSource } from "typeorm";
 import { Urls } from "./urls";
 import AiContoller from "../controllers/aiController";
 
-export default class AiRouter {
-  router: Router;
-  dataSource: DataSource;
-  aiController: AiContoller;
-  openApiKey: string;
+const NewAiRouter = (dataSource: DataSource, openApiKey: string) => {
+  const router = Router();
+  const aiController = new AiContoller(dataSource, openApiKey);
 
-  constructor(dataSource: DataSource, openApiKey: string, jwtSecret: string) {
-    this.router = Router();
-    this.dataSource = dataSource;
-    this.openApiKey = openApiKey;
+  router.get(Urls.AI_INSIGHT, aiController.getAiInsight);
 
-    this.aiController = new AiContoller(dataSource, openApiKey);
-  }
+  return router;
+};
 
-  public route(): Router {
-    this.router.get(Urls.AI_INSIGHT, this.aiController.getAiInsight);
-
-    return this.router;
-  }
-}
+export default NewAiRouter;

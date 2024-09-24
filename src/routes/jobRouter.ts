@@ -1,7 +1,6 @@
 import { Router } from "express";
 import AuthMiddleware from "../middlewares/authMiddleware";
 import { Urls } from "./urls";
-import { AuthController } from "../controllers/authController";
 import JobController from "../controllers/jobController";
 import { DataSource } from "typeorm";
 
@@ -30,7 +29,6 @@ export default class JobRouter {
 
     // Post
     this.router.post(Urls.JOBS, this.jobController.postJob);
-    this.router.post(Urls.RESUME, this.jobController.postResume)
 
     // Patch
     this.router.patch(Urls.SINGLE_JOB, this.jobController.patchJob);

@@ -17,6 +17,7 @@ import { InterviewQuestion } from "../entity/interviewQuestion";
 import { JobInterviewQuestion } from "../entity/jobInterviewQuestion";
 import path from "path";
 import fs from "fs";
+import Busboy from "busboy";
 
 export default class JobController {
   private dataSource: DataSource;
@@ -167,23 +168,6 @@ export default class JobController {
       res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send(ApiRespCreator.createErrUnexpected());
-    }
-  };
-
-  public postResume = async (req: Request, res: Response) => {
-    const jobUlid = req.params["jobUlid"];
-    console.log("Body length:", req.body.length);
-    console.log(Buffer.from(req.body));
-
-    try {
-      const filePath = path.join(__dirname, "file.pdf");
-
-      fs.writeFileSync(filePath, req.body);
-
-      res.sendStatus(constants.HTTP_STATUS_OK);
-    } catch (error) {
-      ApiLogger.error(error);
-      res.sendStatus(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
     }
   };
 

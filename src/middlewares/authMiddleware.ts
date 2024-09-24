@@ -60,12 +60,10 @@ export default class AuthMiddleware {
           }
         } catch (error) {
           // This is an expired token and needs to be deleted
-          await Token.delete(dbToken.jwtToken)
+          await Token.delete(dbToken.jwtToken);
           ApiLogger.error(error);
         }
       }
-
-      ApiLogger.error("No cookies!")
 
       res.sendStatus(constants.HTTP_STATUS_UNAUTHORIZED);
     } catch (error) {

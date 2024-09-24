@@ -13,12 +13,14 @@ export enum Urls {
   SINGLE_JOB = "/jobs/:jobUlid",
   INTERVIEW_QUESTIONS = "/jobs/:jobUlid/interview-questions",
   JOB_INTERVIEW_QUESTION = "/jobs/:jobUlid/job-interview-questions/:jiqId",
-  RESUME = "/jobs/:jobUlid/resume",
   
   // AI
   AI_INSIGHT = "/ai-insight/:jobUlid",
-
+  
   // Courses
   COURSES = "/courses",
   SINGLE_COURSE = "/courses/:courseUlid",
+
+  // Fs
+  RESUME = "/fs/resume",
 }
