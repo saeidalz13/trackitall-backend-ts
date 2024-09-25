@@ -4,20 +4,16 @@ import { DataSource } from "typeorm";
 import FsController from "../controllers/fsController";
 import { Urls } from "./urls";
 
-export default class FsRouter {
-  router: Router;
-  fsController: FsController;
+const newFsRouter = (dataSource: DataSource, jwtSecret: string): Router => {
+  const router = Router();
+  const authMiddleware = new AuthMiddleware(jwtSecret).authenticate;
+  router.use(Urls.FS, authMiddleware)
 
-  constructor(dataSource: DataSource, jwtSecret: string) {
-    this.router = Router();
+  const fsController = new FsController(dataSource);
+  router.post(Urls.RESUME, fsController.postResume);
+  router.get(Urls.RESUME, fsController.getResume)
 
-    this.router.use(new AuthMiddleware(jwtSecret).authenticate);
-    this.fsController = new FsController(dataSource);
-  }
+  return router;
+};
 
-  public route(): Router {
-    this.router.post(Urls.RESUME, this.fsController.postResume);
-
-    return this.router;
-  }
-}
+export default newFsRouter;

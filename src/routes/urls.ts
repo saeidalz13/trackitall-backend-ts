@@ -10,17 +10,18 @@ export enum Urls {
 
   // Jobs
   JOBS = "/jobs",
-  SINGLE_JOB = "/jobs/:jobUlid",
-  INTERVIEW_QUESTIONS = "/jobs/:jobUlid/interview-questions",
-  JOB_INTERVIEW_QUESTION = "/jobs/:jobUlid/job-interview-questions/:jiqId",
-  
+  SINGLE_JOB = `${JOBS}/:jobUlid`,
+  INTERVIEW_QUESTIONS = `${JOBS}/:jobUlid/interview-questions`,
+  JOB_INTERVIEW_QUESTION = `${JOBS}/:jobUlid/job-interview-questions/:jiqId`,
+
   // AI
   AI_INSIGHT = "/ai-insight/:jobUlid",
-  
+
   // Courses
   COURSES = "/courses",
-  SINGLE_COURSE = "/courses/:courseUlid",
+  SINGLE_COURSE = `${COURSES}/:courseUlid`,
 
   // Fs
-  RESUME = "/fs/resume",
+  FS = "/fs",
+  RESUME = `${FS}/resume`,
 }

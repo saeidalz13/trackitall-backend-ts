@@ -4,39 +4,31 @@ import { Urls } from "./urls";
 import JobController from "../controllers/jobController";
 import { DataSource } from "typeorm";
 
-export default class JobRouter {
-  router: Router;
-  jobController: JobController;
+const newJobRouter = (dataSource: DataSource, jwtSecret: string) => {
+  const router = Router();
+  const authMiddleware = new AuthMiddleware(jwtSecret).authenticate;
+  router.use(Urls.JOBS, authMiddleware);
 
-  constructor(jwtSecret: string, dataSource: DataSource) {
-    this.router = Router();
-    this.router.use(new AuthMiddleware(jwtSecret).authenticate);
+  const jobController = new JobController(dataSource);
 
-    this.jobController = new JobController(dataSource);
-  }
+  router.get(Urls.JOBS, jobController.getJobs);
+  router.get(Urls.SINGLE_JOB, jobController.getJob);
+  router.get(Urls.INTERVIEW_QUESTIONS, jobController.getJobInterviewQuestions);
 
-  public route = (): Router => {
-    // Get
-    this.router.get(Urls.JOBS, this.jobController.getJobs);
-    this.router.get(Urls.SINGLE_JOB, this.jobController.getJob);
-    this.router.get(
-      Urls.INTERVIEW_QUESTIONS,
-      this.jobController.getJobInterviewQuestions
-    );
+  // Delete
+  router.delete(Urls.SINGLE_JOB, jobController.deleteJob);
 
-    // Delete
-    this.router.delete(Urls.SINGLE_JOB, this.jobController.deleteJob);
+  // Post
+  router.post(Urls.JOBS, jobController.postJob);
 
-    // Post
-    this.router.post(Urls.JOBS, this.jobController.postJob);
+  // Patch
+  router.patch(Urls.SINGLE_JOB, jobController.patchJob);
+  router.patch(
+    Urls.JOB_INTERVIEW_QUESTION,
+    jobController.patchJobInterviewQuestion
+  );
 
-    // Patch
-    this.router.patch(Urls.SINGLE_JOB, this.jobController.patchJob);
-    this.router.patch(
-      Urls.JOB_INTERVIEW_QUESTION,
-      this.jobController.patchJobInterviewQuestion
-    );
+  return router;
+};
 
-    return this.router;
-  };
-}
+export default newJobRouter;

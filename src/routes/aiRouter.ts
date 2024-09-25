@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 import { Urls } from "./urls";
 import AiContoller from "../controllers/aiController";
 
-const NewAiRouter = (dataSource: DataSource, openApiKey: string) => {
+const newAiRouter = (dataSource: DataSource, openApiKey: string) => {
   const router = Router();
   const aiController = new AiContoller(dataSource, openApiKey);
 
@@ -12,4 +12,4 @@ const NewAiRouter = (dataSource: DataSource, openApiKey: string) => {
   return router;
 };
 
-export default NewAiRouter;
+export default newAiRouter;

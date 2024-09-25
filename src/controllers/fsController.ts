@@ -9,10 +9,16 @@ import { DataSource } from "typeorm";
 import { Job } from "../entity/job";
 
 export default class FsController {
-  dataSource: DataSource;
+  private dataSource: DataSource;
+  private basePathResume: string;
 
   constructor(dataSource: DataSource) {
     this.dataSource = dataSource;
+    this.basePathResume = path.join(__dirname, "..", "filestorage", "resumes");
+  }
+
+  private genResumePath(userUlid: string, jobUlid: string): string {
+    return path.join(this.basePathResume, userUlid, `resume_${jobUlid}.pdf`);
   }
 
   private fetchQueryParam = (req: Request, param: string): string | null => {
@@ -21,6 +27,40 @@ export default class FsController {
       return null;
     }
     return queryParam;
+  };
+
+  public getResume = async (req: Request, res: Response) => {
+    const jobUlid = this.fetchQueryParam(req, "jobUlid");
+    if (jobUlid === null) {
+      res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send(ApiRespCreator.createErrBadQueryParam("jobUlid", jobUlid));
+      return;
+    }
+
+    const userUlid = this.fetchQueryParam(req, "userUlid");
+    if (userUlid === null) {
+      res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send(ApiRespCreator.createErrBadQueryParam("userUlid", userUlid));
+      return;
+    }
+
+    const resumePath = this.genResumePath(userUlid, jobUlid);
+    if (!fs.existsSync(resumePath)) {
+      res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+      return;
+    }
+
+    res.sendFile(resumePath, (error) => {
+      if (error) {
+        ApiLogger.error(`Error sending file: ${error.message}`);
+        // Send an error response if there was an issue sending the file
+        return res
+          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+          .send(ApiRespCreator.createErrUnexpected());
+      }
+    });
   };
 
   public postResume = async (req: Request, res: Response) => {
@@ -43,16 +83,10 @@ export default class FsController {
     const bb = Busboy({ headers: req.headers });
     bb.on("file", async (_, stream, __) => {
       try {
-        const userPath = path.join(
-          __dirname,
-          "..",
-          "filestorage",
-          "resumes",
-          userUlid
-        );
+        const userPath = path.join(this.basePathResume, userUlid);
         fs.mkdirSync(userPath, { recursive: true });
 
-        const resumePath = path.join(userPath, `resume_${jobUlid}.pdf`);
+        const resumePath = this.genResumePath(userUlid, jobUlid);
         stream.pipe(fs.createWriteStream(resumePath));
 
         await this.dataSource
