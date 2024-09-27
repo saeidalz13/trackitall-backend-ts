@@ -5,7 +5,7 @@ import fs from "fs";
 import { ApiLogger } from "../utils/serverUtils";
 import { constants } from "http2";
 import { ApiRespCreator } from "../utils/apiRespUtils";
-import { DataSource } from "typeorm";
+import { DataSource, EntityNotFoundError } from "typeorm";
 import { Job } from "../entity/job";
 
 export default class FsController {
@@ -114,5 +114,51 @@ export default class FsController {
     });
 
     return req.pipe(bb);
+  };
+  public deleteResume = async (req: Request, res: Response) => {
+    const jobUlid = this.fetchQueryParam(req, "jobUlid");
+    if (jobUlid === null) {
+      res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send(ApiRespCreator.createErrBadQueryParam("jobUlid", jobUlid));
+      return;
+    }
+
+    const userUlid = this.fetchQueryParam(req, "userUlid");
+    if (userUlid === null) {
+      res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send(ApiRespCreator.createErrBadQueryParam("userUlid", userUlid));
+      return;
+    }
+
+    this.dataSource.manager.transaction(async (tem) => {
+      try {
+        await tem
+          .createQueryBuilder()
+          .update(Job)
+          .set({ resumePath: null })
+          .where("jobUlid = :jobUlid", { jobUlid })
+          .andWhere("userUlid = :userUlid", { userUlid })
+          .execute();
+
+        const resumePath = this.genResumePath(userUlid, jobUlid);
+        fs.unlinkSync(resumePath);
+
+        ApiLogger.log("Resume deleted");
+        res.sendStatus(constants.HTTP_STATUS_NO_CONTENT);
+      } catch (error) {
+        ApiLogger.error(error);
+        if (error instanceof EntityNotFoundError) {
+          res.sendStatus(constants.HTTP_STATUS_NOT_FOUND);
+          return;
+        }
+
+        console.error(error);
+        res
+          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+          .send(ApiRespCreator.createErrUnexpected());
+      }
+    });
   };
 }

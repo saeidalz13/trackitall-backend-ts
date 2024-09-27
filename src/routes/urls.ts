@@ -15,7 +15,8 @@ export enum Urls {
   JOB_INTERVIEW_QUESTION = `${JOBS}/:jobUlid/job-interview-questions/:jiqId`,
 
   // AI
-  AI_INSIGHT = "/ai-insight/:jobUlid",
+  AI = "/ai",
+  AI_INSIGHT = `${AI}/job-insight/:jobUlid`,
 
   // Courses
   COURSES = "/courses",
