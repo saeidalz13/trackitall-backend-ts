@@ -172,7 +172,7 @@ export class AuthController {
         path: "/",
       });
 
-      res.status(constants.HTTP_STATUS_OK).send(apiResp);
+      res.status(constants.HTTP_STATUS_CREATED).send(apiResp);
     } catch (error) {
       if (error instanceof QueryFailedError) {
         const dbError = error.driverError as any;

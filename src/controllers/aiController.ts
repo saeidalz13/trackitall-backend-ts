@@ -90,5 +90,6 @@ export default class AiContoller {
       res.sendStatus(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
       return;
     }
+
   };
 }
